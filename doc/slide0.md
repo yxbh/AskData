@@ -1,0 +1,12 @@
+# AskData
+
+## Architecture
+
+```mermaid
+graph LR
+    AskData[/AskData/]
+    AskData --> KernelMemory["<b>KernelMemory</b>"]
+    KernelMemory --> Ollama((Ollama))
+    KernelMemory --> QDrant[(QDrant)]
+    KernelMemory --> FileStorage[[FileStorage]]
+```
