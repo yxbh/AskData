@@ -47,7 +47,7 @@ internal class WhisperTranscriptProcessor
                         ;
                     fileRelSanitised = new string([.. fileRelSanitised.Where(c => char.IsLetterOrDigit(c) || allowedChars.Contains(c))]);
 
-                    var fileFlattenName = contentSourceConfig.Name + fileRelSanitised;
+                    var fileFlattenName = $"{contentSourceConfig.Name}___{fileRelSanitised}";
 
                     // build a new processed file with only the content we care about
 
