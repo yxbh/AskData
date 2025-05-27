@@ -1,3 +1,11 @@
 3p_bins/
 podcasts/
 podcasts_transcription/
+memory-files/
+
+ProcessedContent/
+
+.vs/
+obj/
+**/bin/Debug/
+**/bin/Release/
