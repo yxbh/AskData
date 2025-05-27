@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text;
+using System.Text.Json;
 using Path = System.IO.Path;
 
 namespace AskData.KernelMemory.CLI.DataProcessor;
@@ -13,6 +14,11 @@ internal class WhisperTranscriptProcessor
     : IContentProcessor
 {
     public string SupportedContentType { get; } = "whisper-transcript";
+
+    private readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
+        WriteIndented = true
+    };
 
     public async Task<List<FileMetadataModel>> Process(ContentSourceConfig contentSourceConfig)
     {
@@ -39,50 +45,55 @@ internal class WhisperTranscriptProcessor
                 // Deserialize the JSON content to FileMetadataModel
                 var whisperSegments = System.Text.Json.JsonSerializer.Deserialize<List<WhisperSegment>>(jsonContent);
                 
-                if (whisperSegments != null)
+                if (whisperSegments is null)
                 {
-                    var fileRel = Path.GetRelativePath(contentSourceConfig.Directory, filePath);
-                    var fileRelSanitised = fileRel
-                        .Replace(Path.DirectorySeparatorChar, '_')
-                        ;
-                    fileRelSanitised = new string([.. fileRelSanitised.Where(c => char.IsLetterOrDigit(c) || allowedChars.Contains(c))]);
-
-                    var fileFlattenName = $"{contentSourceConfig.Name}___{fileRelSanitised}";
-
-                    // build a new processed file with only the content we care about
-
-                    var stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine("# Podcast Transcript");
-                    stringBuilder.AppendLine();
-                    stringBuilder.AppendLine($"Title: {Path.GetFileNameWithoutExtension(filePath)}");
-                    stringBuilder.AppendLine();
-                    stringBuilder.AppendLine($"File: {fileRel}");
-                    stringBuilder.AppendLine();
-
-                    foreach (var segment in whisperSegments)
-                    {
-                        // Append each segment's text to the string builder
-                        stringBuilder.AppendLine($"[{segment.StartTime} -> {segment.EndTime}]  {segment.Text}  ");
-                    }
-
-                    // write to output file
-                    var outputFilePath = Path.Combine(config.Value.OutputDirectory, fileFlattenName + ".md");
-                    await File.WriteAllTextAsync(outputFilePath, stringBuilder.ToString()).ConfigureAwait(false);
-
-                    var fileMetadata = new FileMetadataModel
-                    {
-                        OriginalName = Path.GetFileName(filePath),
-                        OriginalFilePath = filePath,
-                        LocalOriginalRootDir = contentSourceConfig.Directory,
-                        LocalOriginalFilePath = Path.GetRelativePath(contentSourceConfig.Directory, filePath),
-                        FlattenName = fileFlattenName,
-                        Title = Path.GetFileNameWithoutExtension(filePath),
-                        OutputPath = outputFilePath,
-                        Source = contentSourceConfig.Name,
-                    };
-
-                    output.Add(fileMetadata);
+                    continue;
                 }
+
+                var fileRel = Path.GetRelativePath(contentSourceConfig.Directory, filePath);
+                var fileRelSanitised = fileRel
+                    .Replace(Path.DirectorySeparatorChar, '_')
+                    ;
+                fileRelSanitised = new string([.. fileRelSanitised.Where(c => char.IsLetterOrDigit(c) || allowedChars.Contains(c))]);
+
+                var fileFlattenName = $"{contentSourceConfig.Name}___{fileRelSanitised}";
+
+                // build a new processed file with only the content we care about
+
+                var stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine("# Podcast Transcript");
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine($"Title: {Path.GetFileNameWithoutExtension(filePath)}");
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine($"File: {fileRel}");
+                stringBuilder.AppendLine();
+
+                foreach (var segment in whisperSegments)
+                {
+                    // Append each segment's text to the string builder
+                    stringBuilder.AppendLine($"[{segment.StartTime} -> {segment.EndTime}]  {segment.Text}  ");
+                }
+
+                // write to output file
+                var outputFilePath = Path.Combine(config.Value.OutputDirectory, fileFlattenName + ".md");
+                await File.WriteAllTextAsync(outputFilePath, stringBuilder.ToString()).ConfigureAwait(false);
+
+                var fileMetadata = new FileMetadataModel
+                {
+                    OriginalName = Path.GetFileName(filePath),
+                    OriginalFilePath = filePath,
+                    LocalOriginalRootDir = contentSourceConfig.Directory,
+                    LocalOriginalFilePath = Path.GetRelativePath(contentSourceConfig.Directory, filePath),
+                    FlattenName = fileFlattenName,
+                    Title = Path.GetFileNameWithoutExtension(filePath),
+                    OutputPath = outputFilePath,
+                    Source = contentSourceConfig.Name,
+                };
+
+                output.Add(fileMetadata);
+
+                logger.LogInformation($"Processed file: {filePath} -> {outputFilePath}");
+                logger.LogInformation($"File metadata:\n{JsonSerializer.Serialize(fileMetadata, jsonSerializerOptions)}");
             }
             catch (Exception ex)
             {

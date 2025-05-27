@@ -2,7 +2,7 @@
   "profiles": {
     "AskData.KernelMemory.CLI": {
       "commandName": "Project",
-      "workingDirectory": "$(SolutionDir)\\..\\..\\",
+      "workingDirectory": "$(SolutionDir)\\..\\",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }

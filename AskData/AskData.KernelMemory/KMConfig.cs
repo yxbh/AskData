@@ -8,5 +8,15 @@ public class KMConfig
 
     public string IndexName { get; set; } = string.Empty;
 
-    public string FileStorageDirectory { get; set; } = string.Empty; // Directory where files are stored
+    /// <summary>
+    /// File storage directory for storing files when using the simple file storage system.
+    /// </summary>
+    public string FileStorageDirectory { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Directory for storing vector embeddings when using the simple vector storage system.
+    /// </summary>
+    public string VectorStorageDirectory { get; set; } = string.Empty;
+
+    public bool UseQdrant { get; set; } = true;
 }
