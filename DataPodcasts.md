@@ -45,6 +45,12 @@ For faster-whisper (faster alternative to whisper):
 You will also need to install CUDA Toolkit for this: <https://developer.nvidia.com/cuda-downloads>  
 The runtime components are really all we need during the installation process.
 
+You may fail with an error like below if you don't install CUDA Toolkit:
+
+```log
+Library cublas64_12.dll is not found or cannot be loaded
+```
+
 For PyTorch:
 
 1. `.\venv\Scripts\activate`
