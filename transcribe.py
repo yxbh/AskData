@@ -23,12 +23,18 @@ else:
 model = WhisperModel("distil-small.en", compute_type=compute_type)  # or "float16" if GPU
 
 for audio_file in audio_files:
+    base_name = os.path.splitext(os.path.basename(audio_file))[0]
+    transcript_json_path = os.path.join(output_dir, f"{base_name}.json")
+    if os.path.exists(transcript_json_path):
+        print(f"Transcription for {audio_file} already exists at {transcript_json_path}. Skipping.")
+        continue
+
     segments, info = model.transcribe(audio=audio_file)
     print(f"Transcription for {audio_file}:")
     segment_list = []
     for segment in segments:
-        start_time = f"{int(segment.start // 60):02d}:{int(segment.start % 60):02d}.{int((segment.start % 1) * 1000):03d}"
-        end_time = f"{int(segment.end // 60):02d}:{int(segment.end % 60):02d}.{int((segment.end % 1) * 1000):03d}"
+        start_time = f"{int(segment.start // 3600):02d}:{int((segment.start % 3600) // 60):02d}:{int(segment.start % 60):02d}.{int((segment.start % 1) * 1000):03d}"
+        end_time = f"{int(segment.end // 3600):02d}:{int((segment.end % 3600) // 60):02d}:{int(segment.end % 60):02d}.{int((segment.end % 1) * 1000):03d}"
         print(f"[{start_time} -> {end_time}] {segment.text}")
         segment_dict = dataclasses.asdict(segment)
         segment_dict.pop("tokens")
@@ -38,8 +44,6 @@ for audio_file in audio_files:
     print()
 
     # Write segments to JSON file
-    base_name = os.path.splitext(os.path.basename(audio_file))[0]
-    json_path = os.path.join(output_dir, f"{base_name}.json")
-    with open(json_path, "w", encoding="utf-8") as f:
+    with open(transcript_json_path, "w", encoding="utf-8") as f:
         json.dump(segment_list, f, ensure_ascii=False, indent=2)
-    print(f"Transcription segments saved to {json_path}\n")
+    print(f"Transcription segments saved to {transcript_json_path}\n")
