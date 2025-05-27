@@ -1,0 +1,9 @@
+{
+    "servers": {
+        "AskData": {
+            "type": "stdio",
+            "command": "${workspaceFolder}/AskData/AskData.MCPServer/bin/Debug/net9.0/AskData.MCPServer.exe",
+            "args": []
+        }
+    }
+}
