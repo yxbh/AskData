@@ -43,7 +43,7 @@ internal class WhisperTranscriptProcessor
                 var jsonContent = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
                 
                 // Deserialize the JSON content to FileMetadataModel
-                var whisperSegments = System.Text.Json.JsonSerializer.Deserialize<List<WhisperSegment>>(jsonContent);
+                var whisperSegments = JsonSerializer.Deserialize<List<WhisperSegment>>(jsonContent);
                 
                 if (whisperSegments is null)
                 {
@@ -66,6 +66,12 @@ internal class WhisperTranscriptProcessor
                 stringBuilder.AppendLine($"Title: {Path.GetFileNameWithoutExtension(filePath)}");
                 stringBuilder.AppendLine();
                 stringBuilder.AppendLine($"File: {fileRel}");
+                stringBuilder.AppendLine();
+
+                foreach (var blah in contentSourceConfig.Metadata)
+                {
+                    stringBuilder.AppendLine($"**{blah.Key}:** {blah.Value}  ");
+                }
                 stringBuilder.AppendLine();
 
                 foreach (var segment in whisperSegments)

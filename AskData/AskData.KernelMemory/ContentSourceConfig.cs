@@ -7,4 +7,6 @@ public class ContentSourceConfig
     public string Directory { get; set; } = string.Empty; // Directory of the content source.
 
     public string ContentType { get; set; } = string.Empty; // Type of content (e.g., text, image, etc.).
+
+    public Dictionary<string, string> Metadata { get; set; } = new(); // Additional metadata for the content source.
 }
