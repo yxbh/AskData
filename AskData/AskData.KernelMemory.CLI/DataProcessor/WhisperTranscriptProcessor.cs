@@ -61,9 +61,7 @@ internal class WhisperTranscriptProcessor
                 // build a new processed file with only the content we care about
 
                 var stringBuilder = new StringBuilder();
-                stringBuilder.AppendLine("# Podcast Transcript");
-                stringBuilder.AppendLine();
-                stringBuilder.AppendLine($"Title: {Path.GetFileNameWithoutExtension(filePath)}");
+                stringBuilder.AppendLine($"# {Path.GetFileNameWithoutExtension(filePath)}");
                 stringBuilder.AppendLine();
                 stringBuilder.AppendLine($"File: {fileRel}");
                 stringBuilder.AppendLine();
@@ -72,6 +70,8 @@ internal class WhisperTranscriptProcessor
                 {
                     stringBuilder.AppendLine($"**{blah.Key}:** {blah.Value}  ");
                 }
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine("## Transcript");
                 stringBuilder.AppendLine();
 
                 foreach (var segment in whisperSegments)
