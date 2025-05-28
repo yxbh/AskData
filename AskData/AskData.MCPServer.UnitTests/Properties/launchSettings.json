@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AskData.MCPServer.UnitTests": {
+      "commandName": "Project",
+      "workingDirectory": "$(SolutionDir)\\..\\"
+    }
+  }
+}
