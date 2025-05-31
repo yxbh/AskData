@@ -17,7 +17,7 @@ You can try pip install but it might run into pprint related dependency errors o
 Here, I put podcast-dl into a subdir called `3p_bins`.
 
 1. `cd .\3p_bins\`
-1. `.\podcast-dl-10.5.0-win-x64.exe --url https://feeds.simplecast.com/_7lcF_6g --out-dir ../podcasts/`
+1. `.\podcast-dl-10.5.0-win-x64.exe --url https://feeds.simplecast.com/_7lcF_6g --out-dir ../podcasts/ --include-meta --include-episode-meta --include-episode-transcripts --include-episode-images --episode-digits 4`
 
 ## Now , lets get ready for transcribing
 
