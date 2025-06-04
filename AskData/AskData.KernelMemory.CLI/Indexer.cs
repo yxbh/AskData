@@ -42,7 +42,7 @@ internal class Indexer(
             try
             {
                 logger.LogInformation($"Processing content source: {contentSourceConfig.Directory} ({contentSourceConfig.ContentType})");
-                var fileMetadataCollectionTemp = await contentProcessor.Process(contentSourceConfig).ConfigureAwait(false);
+                var fileMetadataCollectionTemp = await contentProcessor.ProcessAsync(contentSourceConfig, cancellationToken).ConfigureAwait(false);
                 fileMetadataCollection.AddRange(fileMetadataCollectionTemp);
             }
             catch (Exception ex)

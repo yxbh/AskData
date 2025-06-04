@@ -26,7 +26,7 @@ internal class AskDataTool(
             query,
             index: config.Value.IndexName, // Use the index name from the configuration
             limit: 5, // Limit the number of results to 5
-            minRelevance: 0.5, // Minimum relevance score
+            minRelevance: 0.6, // Minimum relevance score
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
 
@@ -51,11 +51,20 @@ internal class AskDataTool(
             docIdTagsMap[result.DocumentId] = result.Partitions.First().Tags;
         }
 
+        // create a doc ID to max relevance map
+        var docIdMaxRelevanceMap = new Dictionary<string, float>();
+        foreach (var result in results.Results)
+        {
+            docIdMaxRelevanceMap[result.DocumentId] = result.Partitions.Select(p => p.Relevance).Max();
+        }
+
         // gather all the document IDs sorted by the highest relevance in their partitions
         string[] docIds = [.. results.Results
         .Select(r => new { r.DocumentId, MaxRelevance = r.Partitions.Max(p => p.Relevance) })
         .OrderByDescending(x => x.MaxRelevance)
         .Select(x => x.DocumentId)];
+
+        var contentTextLength = response.Select(c => c?.Text?.Length ?? 0).Sum();
 
         // Retrieve documents from memory using the docIds
         var documents = new List<Document>();
@@ -70,6 +79,8 @@ internal class AskDataTool(
             var bytes = memoryStream.ToArray();
             var fileContent = Encoding.UTF8.GetString(bytes);
 
+            contentTextLength += fileContent.Length;
+
             response.Add(new Content
             {
                 Text = fileContent,
@@ -79,6 +90,11 @@ internal class AskDataTool(
                     //Priority = result.Partitions.Max(p => p.Relevance),
                 }
             });
+
+            if (contentTextLength >= 66000)
+            {
+                break;
+            }
         }
 
         return response;

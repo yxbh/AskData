@@ -12,6 +12,9 @@ internal static class ServiceExtensions
         services.AddTransient<WhisperTranscriptProcessor>();
         services.AddTransient<IContentProcessor, WhisperTranscriptProcessor>();
 
+        services.AddTransient<StuffYouShouldKnowDataProcessor>();
+        services.AddTransient<IContentProcessor, StuffYouShouldKnowDataProcessor>();
+
         services.AddKernelMemory(config);
 
         return services;

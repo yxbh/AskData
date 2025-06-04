@@ -20,7 +20,7 @@ internal class WhisperTranscriptProcessor
         WriteIndented = true
     };
 
-    public async Task<List<FileMetadataModel>> Process(ContentSourceConfig contentSourceConfig)
+    public async Task<List<FileMetadataModel>> ProcessAsync(ContentSourceConfig contentSourceConfig, CancellationToken cancellationToken)
     {
         if (!contentSourceConfig.ContentType.Equals(SupportedContentType, StringComparison.InvariantCultureIgnoreCase))
         {
@@ -40,7 +40,7 @@ internal class WhisperTranscriptProcessor
             try
             {
                 // Read the JSON file content
-                var jsonContent = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
+                var jsonContent = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
                 
                 // Deserialize the JSON content to FileMetadataModel
                 var whisperSegments = JsonSerializer.Deserialize<List<WhisperSegment>>(jsonContent);
@@ -51,10 +51,7 @@ internal class WhisperTranscriptProcessor
                 }
 
                 var fileRel = Path.GetRelativePath(contentSourceConfig.Directory, filePath);
-                var fileRelSanitised = fileRel
-                    .Replace(Path.DirectorySeparatorChar, '_')
-                    ;
-                fileRelSanitised = new string([.. fileRelSanitised.Where(c => char.IsLetterOrDigit(c) || allowedChars.Contains(c))]);
+                var fileRelSanitised = Util.SanitisePath(fileRel);
 
                 var fileFlattenName = $"{contentSourceConfig.Name}___{fileRelSanitised}";
 
@@ -82,7 +79,7 @@ internal class WhisperTranscriptProcessor
 
                 // write to output file
                 var outputFilePath = Path.Combine(config.Value.OutputDirectory, fileFlattenName + ".md");
-                await File.WriteAllTextAsync(outputFilePath, stringBuilder.ToString()).ConfigureAwait(false);
+                await File.WriteAllTextAsync(outputFilePath, stringBuilder.ToString(), cancellationToken).ConfigureAwait(false);
 
                 var fileMetadata = new FileMetadataModel
                 {

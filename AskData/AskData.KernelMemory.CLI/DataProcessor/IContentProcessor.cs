@@ -3,5 +3,5 @@
 internal interface IContentProcessor
 {
     string SupportedContentType { get; }
-    Task<List<FileMetadataModel>> Process(ContentSourceConfig contentSourceConfig);
+    Task<List<FileMetadataModel>> ProcessAsync(ContentSourceConfig contentSourceConfig, CancellationToken cancellationToken);
 }
