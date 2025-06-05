@@ -27,7 +27,7 @@ internal class AskDataTool(
         var results = await memory.SearchAsync(
             query,
             index: config.Value.IndexName, // Use the index name from the configuration
-            limit: 5, // Limit the number of results to 5
+            limit: 10, // Limit the number of results to 5
             minRelevance: 0.5, // Minimum relevance score
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
@@ -39,34 +39,135 @@ internal class AskDataTool(
             return response; // Return empty response if no results found
         }
 
+
+        await ExpandedPartionsStrategyAsync(memory, response, results, cancellationToken).ConfigureAwait(false);
+        //await WholeFileOrSummaryResponseStrategyAsync(memory, response, results, cancellationToken).ConfigureAwait(false);
+
+        return response;
+    }
+
+    public async Task ExpandedPartionsStrategyAsync(
+        IKernelMemory memory, List<Content> toolResponse, SearchResult searchResult, CancellationToken cancellationToken)
+    {
+        foreach (var citation in searchResult.Results)
+        {
+            // Collect partitions in a sorted collection
+            var partitions = new SortedDictionary<int, Citation.Partition>();
+
+            // For each relevant partition fetch the partition before and one after
+            foreach (var partition in citation.Partitions)
+            {
+                partitions[partition.PartitionNumber] = partition;
+
+                // Filters to fetch adjacent partitions
+                var filters = new List<MemoryFilter>
+                {
+                    //MemoryFilters.ByDocument(citation.DocumentId).ByTag(Constants.ReservedFilePartitionNumberTag, $"{partition.PartitionNumber - 2}"),
+                    MemoryFilters.ByDocument(citation.DocumentId).ByTag(Constants.ReservedFilePartitionNumberTag, $"{partition.PartitionNumber - 1}"),
+                    MemoryFilters.ByDocument(citation.DocumentId).ByTag(Constants.ReservedFilePartitionNumberTag, $"{partition.PartitionNumber + 1}"),
+                    //MemoryFilters.ByDocument(citation.DocumentId).ByTag(Constants.ReservedFilePartitionNumberTag, $"{partition.PartitionNumber + 2}"),
+                };
+
+                // Fetch adjacent partitions and add them to the sorted collection
+                var adjacentList = await memory.SearchAsync(
+                    string.Empty,
+                    index: config.Value.IndexName, // Use the index name from the configuration
+                    filters: filters,
+                    limit: filters.Count,
+                    cancellationToken: cancellationToken
+                    )
+                    .ConfigureAwait(false);
+
+                if (!adjacentList.NoResult)
+                {
+                    foreach (var adjacent in adjacentList.Results.First().Partitions)
+                    {
+                        partitions[adjacent.PartitionNumber] = adjacent;
+                    }
+                }
+            }
+
+            // Print partitions in order
+            foreach (var kvp in partitions)
+            {
+                var partition = kvp.Value;
+
+                var fileName = string.Empty;
+                if (partition.Tags.TryGetValue("original_name", out var value))
+                {
+                    fileName = value.FirstOrDefault() ?? string.Empty;
+                }
+
+                var originalRelativePath = string.Empty;
+                if (partition.Tags.TryGetValue("original_filepath", out var originalRelativePaths))
+                {
+                    originalRelativePath = originalRelativePaths.FirstOrDefault() ?? string.Empty;
+                }
+
+                var source = string.Empty;
+                if (partition.Tags.TryGetValue("source", out var sourceValue))
+                {
+                    source = sourceValue.FirstOrDefault() ?? string.Empty;
+                }
+
+                var url = "URL not available";
+                if (partition.Tags.TryGetValue("remote_url", out var urlValue))
+                {
+                    url = urlValue.FirstOrDefault() ?? "URL not available";
+                }
+
+                toolResponse.Add(new()
+                {
+                    Text = $"""
+---
+Partion Source: {fileName}
+Partition: {partition.PartitionNumber}
+Content Source: {source}
+Original Relative Path: {originalRelativePath}
+Query relevance: {partition.Relevance}
+URL: {url}
+---
+
+```
+{partition.Text}
+```
+"""
+                });
+            }
+        }
+    }
+
+    public async Task WholeFileOrSummaryResponseStrategyAsync(
+        IKernelMemory memory, List<Content> toolResponse, SearchResult searchResult, CancellationToken cancellationToken)
+    {
         // create doc ID to filename map
         var docIdFilenameMap = new Dictionary<string, string>();
-        foreach (var result in results.Results)
+        foreach (var result in searchResult.Results)
         {
             docIdFilenameMap[result.DocumentId] = result.SourceName;
         }
 
         // create doc ID to tags map
         var docIdTagsMap = new Dictionary<string, TagCollection>();
-        foreach (var result in results.Results)
+        foreach (var result in searchResult.Results)
         {
             docIdTagsMap[result.DocumentId] = result.Partitions.First().Tags;
         }
 
         // create a doc ID to max relevance map
         var docIdMaxRelevanceMap = new Dictionary<string, float>();
-        foreach (var result in results.Results)
+        foreach (var result in searchResult.Results)
         {
             docIdMaxRelevanceMap[result.DocumentId] = result.Partitions.Select(p => p.Relevance).Max();
         }
 
         // gather all the document IDs sorted by the highest relevance in their partitions
-        string[] docIds = [.. results.Results
+        string[] docIds = [.. searchResult.Results
         .Select(r => new { r.DocumentId, MaxRelevance = r.Partitions.Max(p => p.Relevance) })
         .OrderByDescending(x => x.MaxRelevance)
         .Select(x => x.DocumentId)];
 
-        var contentTextLength = response.Select(c => c?.Text?.Length ?? 0).Sum();
+        var contentTextLength = toolResponse.Select(c => c?.Text?.Length ?? 0).Sum();
 
         // Retrieve documents from memory using the docIds
         var documents = new List<Document>();
@@ -116,7 +217,7 @@ internal class AskDataTool(
                     //continue;
                 }
 
-                response.Add(new Content()
+                toolResponse.Add(new Content()
                 {
                     Text = $"""
 ---
@@ -157,7 +258,7 @@ Query Relevance: {docIdMaxRelevanceMap[docId]}
             contentTextLength += fileContent.Length;
 
 
-            response.Add(new Content
+            toolResponse.Add(new Content
             {
                 Text = $"""
 ---
@@ -171,30 +272,5 @@ Query Relevance: {docIdMaxRelevanceMap[docId]}
                 Annotations = contentAnnotations,
             });
         }
-
-        return response;
-
-        //return GetSimpleResponse(results);
-    }
-
-    private List<Content> GetSimpleResponse(SearchResult? searchResult)
-    {
-        var response = new List<Content>();
-
-        foreach (var result in searchResult?.Results ?? [])
-        {
-            var content = new Content
-            {
-                Text = string.Join(string.Empty, result.Partitions.Select(p => p.Text)),
-                Annotations = new Annotations()
-                {
-                    Audience = [Role.Assistant],
-                    Priority = result.Partitions.Max(p => p.Relevance),
-                }
-            };
-            response.Add(content);
-        }
-
-        return response;
     }
 }
