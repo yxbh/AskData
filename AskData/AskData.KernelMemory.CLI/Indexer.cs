@@ -153,11 +153,14 @@ internal class Indexer(
                 var isTagsMatching = true;
                 if (resultTags != null)
                 {
-                    if (resultTags.Count != tags.Count)
+                    // Check number of tags matches.
+                    // Ignore tags that start with "__" as they are internal tags to KM.
+                    if (resultTags.Where(t => !t.Key.StartsWith("__")).Count() != tags.Count)
                     {
                         isTagsMatching = false;
                     }
 
+                    // Check if all tags match.
                     foreach (var tag in resultTags)
                     {
                         if (resultTags.TryGetValue(tag.Key, out var values))
