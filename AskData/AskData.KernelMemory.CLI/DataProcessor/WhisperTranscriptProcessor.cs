@@ -105,6 +105,7 @@ internal class WhisperTranscriptProcessor
                     OutputPath = outputFilePath,
                     Source = contentSourceConfig.Name,
                     GenerateSummary = contentSourceConfig.GenerateSummary,
+                    ContentSourceMetadata = contentSourceConfig.Metadata,
                 };
 
                 output.Add(fileMetadata);

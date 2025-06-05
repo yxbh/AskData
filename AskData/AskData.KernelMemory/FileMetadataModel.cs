@@ -33,4 +33,7 @@ public class FileMetadataModel
 
     [JsonPropertyName("generate_summary")]
     public bool GenerateSummary { get; set; } = false;
+
+    [JsonPropertyName("content_source_metadata")]
+    public Dictionary<string, string> ContentSourceMetadata { get; set; } = [];
 }

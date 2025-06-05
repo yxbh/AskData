@@ -120,6 +120,7 @@ internal class Indexer(
             {
                 { "org_filepath", file },
                 { "org_filename", Path.GetFileName(file) },
+                { "org_filename_upper", Path.GetFileName(file).ToUpperInvariant() },
                 { "org_filetype", Path.GetExtension(file) },
                 { "org_filesize", new FileInfo(file).Length.ToString() },
                 { "org_filedate", File.GetLastWriteTime(file).ToString() },
@@ -128,12 +129,19 @@ internal class Indexer(
                 { "original_name", fileMetadata.OriginalName },
                 { "flatten_name", fileMetadata.FlattenName },
                 { "title", fileMetadata.Title },
+                { "title_upper", fileMetadata.Title.ToUpperInvariant() },
                 { "source", fileMetadata.Source },
                 { "original_filepath", fileMetadata.OriginalFilePath },
                 { "local_original_root_dir", fileMetadata.LocalOriginalRootDir },
                 { "local_original_filepath", fileMetadata.LocalOriginalFilePath },
                 { "_output_path", fileMetadata.OutputPath },
             };
+
+            foreach (var kvp in fileMetadata.ContentSourceMetadata)
+            {
+                tags.Add($"content_source_metadata__{kvp.Key}", kvp.Value);
+                tags.Add($"content_source_metadata__{kvp.Key}__upper", kvp.Value.ToUpperInvariant());
+            }
 
             if (!searchResult.NoResult)
             {

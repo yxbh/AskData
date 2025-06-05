@@ -139,6 +139,7 @@ internal class StuffYouShouldKnowDataProcessor
                 OutputPath = outputFilePath,
                 Source = contentSourceConfig.Name,
                 GenerateSummary = contentSourceConfig.GenerateSummary,
+                ContentSourceMetadata = contentSourceConfig.Metadata,
             };
 
             await File.WriteAllTextAsync(outputFilePath, stringBuilder.ToString(), cancellationToken).ConfigureAwait(false);
