@@ -153,6 +153,11 @@ internal class Indexer(
                 var isTagsMatching = true;
                 if (resultTags != null)
                 {
+                    if (resultTags.Count != tags.Count)
+                    {
+                        isTagsMatching = false;
+                    }
+
                     foreach (var tag in resultTags)
                     {
                         if (resultTags.TryGetValue(tag.Key, out var values))
