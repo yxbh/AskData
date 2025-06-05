@@ -119,6 +119,10 @@ internal class AskDataTool(
                 response.Add(new Content()
                 {
                     Text = $"""
+---
+Query Relevance: {docIdMaxRelevanceMap[docId]}
+---
+
 # {title}
 
 {text}
