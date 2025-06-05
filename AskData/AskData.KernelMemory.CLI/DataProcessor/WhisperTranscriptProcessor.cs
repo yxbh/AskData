@@ -27,6 +27,13 @@ internal class WhisperTranscriptProcessor
             return [];
         }
 
+        var contentSourceMetadata = contentSourceConfig.Metadata;
+        var contentSourceTitle = string.Empty;
+        if (contentSourceMetadata.TryGetValue("PodcastTitle", out var contentSourceTitleTemp))
+        {
+            contentSourceTitle = contentSourceTitleTemp;
+        }
+
         Directory.CreateDirectory(config.Value.OutputDirectory);
 
         var output = new List<FileMetadataModel>();
@@ -55,12 +62,18 @@ internal class WhisperTranscriptProcessor
 
                 var fileFlattenName = $"{contentSourceConfig.Name}___{fileRelSanitised}";
 
+                var title = string.IsNullOrWhiteSpace(contentSourceTitle) ? Path.GetFileNameWithoutExtension(filePath) : contentSourceTitle;
+
                 // build a new processed file with only the content we care about
 
                 var stringBuilder = new StringBuilder();
-                stringBuilder.AppendLine($"# {Path.GetFileNameWithoutExtension(filePath)}");
+                stringBuilder.AppendLine($"# {title}");
                 stringBuilder.AppendLine();
                 stringBuilder.AppendLine($"File: {fileRel}");
+                if (!string.IsNullOrWhiteSpace(contentSourceTitle))
+                {
+                    stringBuilder.Append($"Podcast Title: {contentSourceTitle}");
+                }
                 stringBuilder.AppendLine();
 
                 foreach (var blah in contentSourceConfig.Metadata)
@@ -88,9 +101,10 @@ internal class WhisperTranscriptProcessor
                     LocalOriginalRootDir = contentSourceConfig.Directory,
                     LocalOriginalFilePath = Path.GetRelativePath(contentSourceConfig.Directory, filePath),
                     FlattenName = fileFlattenName,
-                    Title = Path.GetFileNameWithoutExtension(filePath),
+                    Title = title,
                     OutputPath = outputFilePath,
                     Source = contentSourceConfig.Name,
+                    GenerateSummary = contentSourceConfig.GenerateSummary,
                 };
 
                 output.Add(fileMetadata);

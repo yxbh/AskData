@@ -22,6 +22,13 @@ internal class StuffYouShouldKnowDataProcessor
             return [];
         }
 
+        var contentSourceMetadata = contentSourceConfig.Metadata;
+        var contentSourceTitle = string.Empty;
+        if (contentSourceMetadata.TryGetValue("PodcastTitle", out var contentSourceTitleTemp))
+        {
+            contentSourceTitle = contentSourceTitleTemp;
+        }
+
         // Ensure the output directory exists
         Directory.CreateDirectory(config.Value.OutputDirectory);
 
@@ -70,6 +77,11 @@ internal class StuffYouShouldKnowDataProcessor
 
             var metaData = JsonSerializer.Deserialize<PodcastEpisodeModel>(metaDataText);
 
+            var title = metaData?.Title ?? Path.GetFileNameWithoutExtension(transcriptFilePath);
+
+            var podcastContentSummary = metaData?.Content ?? string.Empty;
+            podcastContentSummary = metaData?.Itunes?.Summary ?? podcastContentSummary;
+
             // get rid of some stuff to save context space
             if (metaData != null)
             {
@@ -80,17 +92,23 @@ internal class StuffYouShouldKnowDataProcessor
                 metaData.ContentEncodedSnippet = null;
 
                 metaDataText = JsonSerializer.Serialize(metaData);
-            }            
+            }
 
             // build a new processed file with only the content we care about
             var stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine($"# {metaData?.Title ?? Path.GetFileNameWithoutExtension(transcriptFilePath)}");
+            stringBuilder.AppendLine($"# {title}");
             stringBuilder.AppendLine();
             stringBuilder.AppendLine($"File: {transcriptFilePath}");
-            stringBuilder.AppendLine($"Title: {metaData?.Title}");
+            if (!string.IsNullOrWhiteSpace(contentSourceTitle))
+            {
+                stringBuilder.AppendLine($"Podcast Title: {contentSourceTitle}");
+            }
+            stringBuilder.AppendLine($"Episode Title: {title}");
             stringBuilder.AppendLine($"Published: {metaData?.IsoDate}");
+            stringBuilder.AppendLine($"Link: {metaData?.Link}");
             stringBuilder.AppendLine();
-            stringBuilder.AppendLine(metaData?.Content ?? string.Empty);
+            stringBuilder.AppendLine("## Summary");
+            stringBuilder.AppendLine(podcastContentSummary);
             stringBuilder.AppendLine();
             //stringBuilder.AppendLine("## Episode Metadata");
             //stringBuilder.AppendLine();
@@ -117,9 +135,10 @@ internal class StuffYouShouldKnowDataProcessor
                 LocalOriginalRootDir = contentSourceConfig.Directory,
                 LocalOriginalFilePath = Path.GetRelativePath(contentSourceConfig.Directory, transcriptFilePath),
                 FlattenName = fileFlattenName,
-                Title = Path.GetFileNameWithoutExtension(transcriptFilePath),
+                Title = title,
                 OutputPath = outputFilePath,
                 Source = contentSourceConfig.Name,
+                GenerateSummary = contentSourceConfig.GenerateSummary,
             };
 
             await File.WriteAllTextAsync(outputFilePath, stringBuilder.ToString(), cancellationToken).ConfigureAwait(false);

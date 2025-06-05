@@ -1,4 +1,5 @@
 ﻿using AskData.KernelMemory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.KernelMemory;
 using ModelContextProtocol.Protocol;
@@ -12,7 +13,8 @@ namespace AskData.MCPServer.Tool;
 internal class AskDataTool(
     IKernelMemory memory,
     IMcpServer server,
-    IOptions<KMConfig> config
+    IOptions<KMConfig> config,
+    ILogger<AskDataTool> logger
     )
 {
     [McpServerTool(Name = "AskData", Destructive = false, Idempotent = true, OpenWorld = true, ReadOnly = true)]
@@ -26,7 +28,7 @@ internal class AskDataTool(
             query,
             index: config.Value.IndexName, // Use the index name from the configuration
             limit: 5, // Limit the number of results to 5
-            minRelevance: 0.6, // Minimum relevance score
+            minRelevance: 0.5, // Minimum relevance score
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
 
@@ -70,6 +72,63 @@ internal class AskDataTool(
         var documents = new List<Document>();
         foreach (var docId in docIds)
         {
+            logger.LogInformation($"Found document ID \"{docId}\" with relevance score {docIdMaxRelevanceMap[docId]}");
+
+            var contentAnnotations = new Annotations()
+            {
+                Audience = [Role.Assistant],
+                //Priority = result.Partitions.Max(p => p.Relevance),
+            };
+
+            if (contentTextLength >= 56000)
+            {
+                var title = string.Empty;
+                if (docIdTagsMap[docId].TryGetValue("title", out var titleTag))
+                {
+                    title = titleTag.First();
+                }
+                else
+                {
+                    logger.LogError($"No title found for document ID: {docId}");
+                }
+
+                var text = "NO SUMMARY AVAILABLE";
+
+                var summaryResults = await memory.SearchSummariesAsync(
+                    filter: MemoryFilters.ByDocument(docId),
+                    index: config.Value.IndexName,
+                    cancellationToken: cancellationToken
+                    ).ConfigureAwait(false);
+
+                if (summaryResults.Count > 0)
+                {
+                    // We only worry about the first one for now.
+                    var docSummary = summaryResults.First().Partitions.First().Text;
+
+                    // remove anything wrapped in a `<think>` block
+                    docSummary = docSummary.Split("</think>", 2).Last();
+
+                    text = docSummary.Trim();
+                }
+                else
+                {
+                    logger.LogError($"No summary found available for document ID: {docId}");
+                    //continue;
+                }
+
+                response.Add(new Content()
+                {
+                    Text = $"""
+# {title}
+
+{text}
+""",
+                    Annotations = contentAnnotations,
+                });
+
+                continue;
+            }
+
             var streamable = await memory.ExportFileAsync(
                 docId, fileName: docIdFilenameMap[docId], index: config.Value.IndexName, cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
@@ -77,24 +136,36 @@ internal class AskDataTool(
             var stream = await streamable.GetStreamAsync().ConfigureAwait(false);
             await stream.CopyToAsync(memoryStream, cancellationToken).ConfigureAwait(false);
             var bytes = memoryStream.ToArray();
-            var fileContent = Encoding.UTF8.GetString(bytes);
+
+            var fileContent = string.Empty;
+            // Detect and skip UTF8 BOM if present
+            int bomLength = Encoding.UTF8.GetPreamble().Length;
+            if (bytes.Length >= bomLength && Encoding.UTF8.GetPreamble().SequenceEqual(bytes.Take(bomLength)))
+            {
+                // Skip BOM
+                fileContent = Encoding.UTF8.GetString(bytes, bomLength, bytes.Length - bomLength);
+            }
+            else
+            {
+                fileContent = Encoding.UTF8.GetString(bytes);
+            }
 
             contentTextLength += fileContent.Length;
 
+
             response.Add(new Content
             {
-                Text = fileContent,
-                Annotations = new Annotations()
-                {
-                    Audience = [Role.Assistant],
-                    //Priority = result.Partitions.Max(p => p.Relevance),
-                }
+                Text = $"""
+---
+Query Relevance: {docIdMaxRelevanceMap[docId]}
+---
+                
+{fileContent}
+                
+"""
+                ,
+                Annotations = contentAnnotations,
             });
-
-            if (contentTextLength >= 66000)
-            {
-                break;
-            }
         }
 
         return response;

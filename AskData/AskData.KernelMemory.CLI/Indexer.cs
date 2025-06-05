@@ -115,23 +115,6 @@ internal class Indexer(
                 cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
 
-            if (!searchResult.NoResult)
-            {
-                // get all the sha256 hashes if available
-                var sha256Hashes = searchResult.Results
-                    .SelectMany(x => x.Partitions.Select(
-                            p => p.Tags.ContainsKey("sha256") ? p.Tags["sha256"].FirstOrDefault() : string.Empty
-                        ))
-                    .Where(h => !string.IsNullOrEmpty(h))
-                    .ToHashSet();
-
-                if (sha256Hashes.Contains(fileHash) && !overwrite)
-                {
-                    logger.LogInformation($"Document with the same hash already imported. Skipping: {documentId}");
-                    continue;
-                }
-            }
-
             var tags = new TagCollection
             {
                 { "org_filepath", file },
@@ -151,10 +134,59 @@ internal class Indexer(
                 { "_output_path", fileMetadata.OutputPath },
             };
 
+            if (!searchResult.NoResult)
+            {
+                var resultTags = searchResult.Results.First().Partitions.First().Tags;
+                
+                ///
+                /// KM injects additonal tags, we need to compare only the ones we add/mod.
+                ///
+                var isTagsMatching = true;
+                if (resultTags != null)
+                {
+                    foreach (var tag in resultTags)
+                    {
+                        if (resultTags.TryGetValue(tag.Key, out var values))
+                        {
+                            if (tag.Value != values)
+                            {
+                                isTagsMatching = false;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            isTagsMatching = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    isTagsMatching = false;
+                }
+
+                // get all the sha256 hashes if available
+                var sha256Hashes = searchResult.Results
+                    .SelectMany(x => x.Partitions.Select(
+                            p => p.Tags.ContainsKey("sha256") ? p.Tags["sha256"].FirstOrDefault() : string.Empty
+                        ))
+                    .Where(h => !string.IsNullOrEmpty(h))
+                    .ToHashSet();
+
+                if (sha256Hashes.Contains(fileHash) && isTagsMatching && !overwrite)
+                {
+                    logger.LogInformation($"Document with the same hash already imported. Skipping: {documentId}");
+                    continue;
+                }
+            }
+
             logger.LogInformation($"Importing ({idx}/{fileMetadataCollection.Count}) {file} with document ID {documentId}");
 
+            var steps = fileMetadata.GenerateSummary ? Constants.PipelineWithSummary : Constants.DefaultPipeline;
+
             await memory.ImportDocumentAsync(
-                file, documentId, tags, index: configOptions.Value.IndexName,
+                file, documentId, tags, index: configOptions.Value.IndexName, steps: steps,
                 cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
         }

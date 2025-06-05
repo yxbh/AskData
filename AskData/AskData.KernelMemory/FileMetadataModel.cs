@@ -30,4 +30,7 @@ public class FileMetadataModel
 
     [JsonPropertyName("_output_path")]
     public string OutputPath { get; set; } = string.Empty;
+
+    [JsonPropertyName("generate_summary")]
+    public bool GenerateSummary { get; set; } = false;
 }

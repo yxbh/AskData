@@ -8,5 +8,7 @@ public class ContentSourceConfig
 
     public string ContentType { get; set; } = string.Empty; // Type of content (e.g., text, image, etc.).
 
-    public Dictionary<string, string> Metadata { get; set; } = new(); // Additional metadata for the content source.
+    public bool GenerateSummary { get; set; } = false;  // Perform additional summarization steps.
+
+    public Dictionary<string, string> Metadata { get; set; } = []; // Additional metadata for the content source.
 }

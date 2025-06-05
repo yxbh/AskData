@@ -1,9 +1,9 @@
-﻿
-using AskData.KernelMemory;
+﻿using AskData.KernelMemory;
 using AskData.MCPServer.Tool;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.KernelMemory;
 using ModelContextProtocol.Server;
@@ -39,7 +39,8 @@ public class AskDataToolTests
         var tool = new AskDataTool(
             serviceProvider.GetRequiredService<IKernelMemory>(),
             Substitute.For<IMcpServer>(),
-            kmConfig
+            kmConfig,
+            Substitute.For<ILogger<AskDataTool>>()
         );
 
         var result = await tool.SearchAskDataAsync("what does the podcast say about punishment when toilet training", default);
