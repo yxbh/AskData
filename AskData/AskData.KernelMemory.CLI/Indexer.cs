@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.Context;
 using Microsoft.KernelMemory.DocumentStorage;
 using Microsoft.KernelMemory.MemoryStorage;
 using System.Security.Cryptography;
@@ -185,8 +186,52 @@ internal class Indexer(
 
             var steps = fileMetadata.GenerateSummary ? Constants.PipelineWithSummary : Constants.DefaultPipeline;
 
+            var context = new RequestContext();
+            if (fileMetadata.GenerateSummary)
+            {
+                context.SetArg(
+                    Constants.CustomContext.Summary.Prompt,
+// original summarization prompt: https://github.com/microsoft/kernel-memory/blob/bd8d34e67dcd2b52acb408661d58b648453efbd3/service/Core/Prompts/summarize.txt
+"""
+[SUMMARIZATION RULES]
+DON'T WASTE WORDS.
+USE SHORT, CLEAR, COMPLETE SENTENCES.
+DO NOT USE BULLET POINTS OR DASHES.
+USE ACTIVE VOICE.
+MAXIMIZE DETAIL, MEANING.
+FOCUS ON THE CONTENT.
+[END RULES]
+
+[BANNED PHRASES]
+This article
+This document
+This page
+This material
+[END LIST]
+
+Summarize this:
+Hello how are you?
++++++
+Hello
+
+Summarize this:
+{{$input}}
++++++
+"""
+                );
+                context.SetArg(
+                    Constants.CustomContext.Summary.TargetTokenSize,
+                    300  // Try to generate a token no longer than X tokens
+                );
+            }
+
             await memory.ImportDocumentAsync(
-                file, documentId, tags, index: configOptions.Value.IndexName, steps: steps,
+                file,
+                documentId,
+                tags,
+                index: configOptions.Value.IndexName,
+                context: context,
+                steps: steps,
                 cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
         }
