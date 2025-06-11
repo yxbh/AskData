@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.Pipeline;
 
 namespace AskData.KernelMemory;
 
@@ -36,6 +37,10 @@ public static class ServiceExtensions
 
             // TODO: support image OCR
 
+            builder.WithContentDecoder<CustomContentDecoder>();
+
+            builder.Services.AddTransient<MimeTypesDetection>();  // needed for CustomMimeTypesDetection
+            builder.WithCustomMimeTypeDetection<CustomMimeTypesDetection>();
         });
 
         return services;

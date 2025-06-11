@@ -122,8 +122,9 @@ internal class StuffYouShouldKnowDataProcessor
 
             var fileRel = Path.GetRelativePath(contentSourceConfig.Directory, transcriptFilePath);
             var fileRelSanitised = Util.SanitisePath(fileRel);
+            var sanitisedPrefix = Util.SanitisePath(contentSourceConfig.Name);
 
-            var fileFlattenName = $"{contentSourceConfig.Name}___{fileRelSanitised}";
+            var fileFlattenName = $"{sanitisedPrefix}___{fileRelSanitised}";
 
             // Save as markdown file
             var outputFilePath = Path.Combine(config.Value.OutputDirectory, $"{fileFlattenName}.md");

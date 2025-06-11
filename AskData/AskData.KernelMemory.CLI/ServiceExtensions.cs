@@ -1,5 +1,6 @@
 ﻿using AskData.KernelMemory.CLI.DataProcessor;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.KernelMemory;
 
 namespace AskData.KernelMemory.CLI;
 
@@ -8,6 +9,9 @@ internal static class ServiceExtensions
         this IServiceCollection services, KMConfig config)
     {
         services.AddSingleton<Indexer>();
+
+        services.AddTransient<GitRepoFileProcessor>();
+        services.AddTransient<IContentProcessor, GitRepoFileProcessor>();
 
         services.AddTransient<WhisperTranscriptProcessor>();
         services.AddTransient<IContentProcessor, WhisperTranscriptProcessor>();

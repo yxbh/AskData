@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="FluentAssertions" Version="8.3.0" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.5" />
     <PackageVersion Include="Microsoft.KernelMemory" Version="0.98.250508.3" />

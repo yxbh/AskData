@@ -40,7 +40,6 @@ internal class WhisperTranscriptProcessor
 
         // Get all .json files in the specified directory (non-recursive)
         var jsonFiles = Directory.GetFiles(contentSourceConfig.Directory, "*.json", SearchOption.TopDirectoryOnly);
-        var allowedChars = new HashSet<char>() { '_', '.' };
 
         foreach (var filePath in jsonFiles)
         {
@@ -59,8 +58,9 @@ internal class WhisperTranscriptProcessor
 
                 var fileRel = Path.GetRelativePath(contentSourceConfig.Directory, filePath);
                 var fileRelSanitised = Util.SanitisePath(fileRel);
+                var sanitisedPrefix = Util.SanitisePath(contentSourceConfig.Name);
 
-                var fileFlattenName = $"{contentSourceConfig.Name}___{fileRelSanitised}";
+                var fileFlattenName = $"{sanitisedPrefix}___{fileRelSanitised}";
 
                 var title = string.IsNullOrWhiteSpace(contentSourceTitle) ? Path.GetFileNameWithoutExtension(filePath) : contentSourceTitle;
 

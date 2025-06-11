@@ -128,9 +128,9 @@ Query relevance: {partition.Relevance}
 URL: {url}
 ---
 
-```
+````
 {partition.Text}
-```
+````
 """
                 });
             }
