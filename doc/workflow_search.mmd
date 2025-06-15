@@ -8,18 +8,20 @@ sequenceDiagram
     participant FileStorage
 
     User->>vscode: Query
-    vscode->>AskData: LLM processed query
+    vscode->>vscode: LLM processed query
+    vscode->>AskData: MCP tool call \w query
     AskData->>KernelMemory: SearchAsync(query)
-    KernelMemory->>Ollama: query
-    Ollama-->>KernelMemory: embedding
+    KernelMemory->>Ollama: Query
+    Ollama-->>KernelMemory: Embedding
     KernelMemory->>QDrant: Search embedding
-    QDrant->>KernelMemory: Memories
-    KernelMemory->>AskData: search results:<br>chunks + citations
-    AskData->>AskData: Process & rank results
-    AskData->>KernelMemory: Get files based on citation doc IDs
+    QDrant-->>KernelMemory: Memories
+    KernelMemory-->>AskData: search results:<br>chunks + citations
+    AskData->>AskData: Process results
+    AskData->>KernelMemory: (Optional) ExportFileAsync()
     KernelMemory->>FileStorage: Retrieve files
-    FileStorage->>KernelMemory: Return files
-    KernelMemory->>AskData: Files
+    FileStorage-->>KernelMemory: Files
+    KernelMemory-->>AskData: Files
     AskData->>AskData: Process files
-    AskData->>vscode: query response
-    vscode->>User: render
+    AskData-->>vscode: MCP tool response
+    vscode->>vscode: RAG
+    vscode-->>User: Output
