@@ -161,11 +161,11 @@ internal class Indexer(
                     }
 
                     // Check if all tags match.
-                    foreach (var tag in resultTags)
+                    foreach (var tag in tags)
                     {
-                        if (resultTags.TryGetValue(tag.Key, out var values))
+                        if (resultTags.TryGetValue(tag.Key, out var resultTagValues))
                         {
-                            if (tag.Value != values)
+                            if (tag.Value != resultTagValues)
                             {
                                 isTagsMatching = false;
                                 break;
