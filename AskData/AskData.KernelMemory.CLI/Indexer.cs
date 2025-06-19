@@ -40,9 +40,16 @@ internal class Indexer(
                 logger.LogWarning($"No processor found for content type '{contentSourceConfig.ContentType}'. Skipping.");
                 continue;
             }
+
             try
             {
                 logger.LogInformation($"Processing content source: {contentSourceConfig.Directory} ({contentSourceConfig.ContentType})");
+
+                if (!Directory.Exists(contentSourceConfig.Directory))
+                {
+                    throw new DirectoryNotFoundException($"Content source directory does not exist: {contentSourceConfig.Directory}");
+                }
+
                 var fileMetadataCollectionTemp = await contentProcessor.ProcessAsync(contentSourceConfig, cancellationToken).ConfigureAwait(false);
                 fileMetadataCollection.AddRange(fileMetadataCollectionTemp);
             }
@@ -116,14 +123,17 @@ internal class Indexer(
                 cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
 
+            var orgRelativeFilePath = Path.GetRelativePath(fileMetadata.LocalOriginalRootDir, fileMetadata.LocalOriginalFilePath);
+
             var tags = new TagCollection
             {
-                { "org_filepath", file },
-                { "org_filename", Path.GetFileName(file) },
-                { "org_filename_upper", Path.GetFileName(file).ToUpperInvariant() },
-                { "org_filetype", Path.GetExtension(file) },
-                { "org_filesize", new FileInfo(file).Length.ToString() },
-                { "org_filedate", File.GetLastWriteTime(file).ToString() },
+                { "orginal_filename", Path.GetFileName(file) },
+                { "orginal_filename_upper", Path.GetFileName(file).ToUpperInvariant() },
+                { "orginal_rel_filepath", orgRelativeFilePath },
+                { "orginal_rel_filepath_upper", orgRelativeFilePath.ToUpperInvariant() },
+                { "orginal_filetype", Path.GetExtension(file) },
+                { "orginal_filesize", new FileInfo(file).Length.ToString() },
+                { "orginal_filedate", File.GetLastWriteTime(file).ToString() },
                 { "sha256", fileHash },
                 { "remote_url", fileMetadata.Url },
                 { "original_name", fileMetadata.OriginalName },
