@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AskData.MCPServer", "AskDat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AskData.MCPServer.UnitTests", "AskData.MCPServer.UnitTests\AskData.MCPServer.UnitTests.csproj", "{2653EB2A-5C4A-4320-92FE-F0ABD6BAE7E2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AskData.KernelMemory.UnitTests", "AskData.KernelMemory.UnitTests\AskData.KernelMemory.UnitTests.csproj", "{B545ADB7-7CED-403E-8C5E-7B9151D631A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{2653EB2A-5C4A-4320-92FE-F0ABD6BAE7E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2653EB2A-5C4A-4320-92FE-F0ABD6BAE7E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2653EB2A-5C4A-4320-92FE-F0ABD6BAE7E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B545ADB7-7CED-403E-8C5E-7B9151D631A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B545ADB7-7CED-403E-8C5E-7B9151D631A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B545ADB7-7CED-403E-8C5E-7B9151D631A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B545ADB7-7CED-403E-8C5E-7B9151D631A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

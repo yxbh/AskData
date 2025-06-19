@@ -1,6 +1,5 @@
-﻿using AskData.KernelMemory.CLI.DataProcessor;
+using AskData.KernelMemory.CLI.DataProcessor;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.KernelMemory;
 
 namespace AskData.KernelMemory.CLI;
 
@@ -18,6 +17,8 @@ internal static class ServiceExtensions
 
         services.AddTransient<StuffYouShouldKnowDataProcessor>();
         services.AddTransient<IContentProcessor, StuffYouShouldKnowDataProcessor>();
+
+        services.AddTransient<MarkdownRefResolver>();
 
         services.AddKernelMemory(config);
 

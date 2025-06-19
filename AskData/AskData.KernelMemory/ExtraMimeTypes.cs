@@ -1,4 +1,4 @@
-﻿namespace AskData.KernelMemory;
+namespace AskData.KernelMemory;
 
 public static class ExtraMimeTypes
 {

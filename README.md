@@ -39,9 +39,9 @@ In this command, `$(pwd)/qdrant_storage` refers to a directory named qdrant_stor
 
 ## Building the vector database
 
-1. Create a new appsettings.*.json file under the [AskData.KernelMemory.CLI](./AskData.KernelMemory.CLI/) project folder.
-1. Define new ContentSource's under the `ContentSources` key (refer to [appsettings.json](./AskData.KernelMemory.CLI/appsettings.json)).
-1. Run the [AskData.KernelMemory.CLI](./AskData.KernelMemory.CLI/AskData.KernelMemory.CLI.csproj) project to preprocess and index the defined `ContentSource`'s into the vector DB.
+1. Create a new appsettings.*.json file under the [AskData.KernelMemory.CLI](./AskData/AskData.KernelMemory.CLI/) project folder.
+1. Define new ContentSource's under the `ContentSources` key (refer to [appsettings.json](./AskData/AskData.KernelMemory.CLI/appsettings.json)).
+1. Run the [AskData.KernelMemory.CLI](./AskData/AskData.KernelMemory.CLI/AskData.KernelMemory.CLI.csproj) project to preprocess and index the defined `ContentSource`'s into the vector DB.
 
 Right now, only the `whisper-transcript` content type is supported. Implement new `IContentProcessor` class to support others (ref: [WhisperTranscriptProcessor.cs](./AskData.KernelMemory.CLI/DataProcessor/WhisperTranscriptProcessor.cs)).
 

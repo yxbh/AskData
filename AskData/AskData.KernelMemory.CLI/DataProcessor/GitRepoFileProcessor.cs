@@ -1,9 +1,6 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SharpCompress.Common;
-using System.Collections.Immutable;
 using System.Text.Json;
 
 namespace AskData.KernelMemory.CLI.DataProcessor;
@@ -11,7 +8,7 @@ namespace AskData.KernelMemory.CLI.DataProcessor;
 internal class GitRepoFileProcessor
     (
     IOptions<ContentProcessorConfig> config,
-    ILogger<StuffYouShouldKnowDataProcessor> logger
+    ILogger<GitRepoFileProcessor> logger
     )
     : IContentProcessor
 {
@@ -24,33 +21,21 @@ internal class GitRepoFileProcessor
             return [];
         }
 
+        Matcher matcher = new();
+
+        matcher.AddIncludePatterns(contentSourceConfig.IncludePattern);
+        matcher.AddExcludePatterns(contentSourceConfig.ExcludePattern);
+
         // Ensure the output directory exists
         Directory.CreateDirectory(config.Value.OutputDirectory);
 
-        Matcher matcher = new();
-
-        if (contentSourceConfig.Metadata.TryGetValue("_include_pattern", out var userDefinedGlobPattern))
-        {
-            var includePatterns = userDefinedGlobPattern.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            matcher.AddIncludePatterns(includePatterns);
-        }
-        else
-        {
-            var includePattern = "./**/*.*";
-            matcher.AddIncludePatterns([includePattern]);
-        }
-        if (contentSourceConfig.Metadata.TryGetValue("_exclude_pattern", out var userDefinedExcludePattern))
-        {
-            var excludePatterns = userDefinedExcludePattern.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            matcher.AddExcludePatterns(excludePatterns);
-        }
-
         var output = new List<FileMetadataModel>();
 
-       var files = matcher.GetResultsInFullPath(contentSourceConfig.Directory);
-
+        var files = matcher.GetResultsInFullPath(contentSourceConfig.Directory);
         foreach (var filePath in files)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (!File.Exists(filePath))
             {
                 logger.LogError($"File not found: {filePath}");
@@ -65,9 +50,12 @@ internal class GitRepoFileProcessor
 
             var outputFilePath = Path.Combine(config.Value.OutputDirectory, $"{fileFlattenName}");
 
-            File.Copy(filePath, outputFilePath, true);
+            await Util.CopyFileAsync(filePath, outputFilePath, cancellationToken).ConfigureAwait(false);
 
             var title = Path.GetFileNameWithoutExtension(filePath);
+
+            var url = $"{contentSourceConfig.UrlPrefix}{fileRel}{contentSourceConfig.UrlPostfix}";
+            url = (new Uri(url)).ToString(); // Ensure URL is properly formatted
 
             var contentSourceMetadata = new Dictionary<string, string>();
             foreach (var kvp in contentSourceConfig.Metadata)
@@ -85,13 +73,16 @@ internal class GitRepoFileProcessor
             var fileMetadata = new FileMetadataModel
             {
                 OriginalName = Path.GetFileName(filePath),
-                OriginalFilePath = filePath,
+                LocalOriginalFullFilePath = filePath,
                 LocalOriginalRootDir = contentSourceConfig.Directory,
-                LocalOriginalFilePath = Path.GetRelativePath(contentSourceConfig.Directory, filePath),
+                LocalOriginalRelativeFilePath = Path.GetRelativePath(contentSourceConfig.Directory, filePath),
                 FlattenName = fileFlattenName,
                 Title = title,
                 OutputPath = outputFilePath,
                 Source = contentSourceConfig.Name,
+                Url = url,
+                UrlPrefix = contentSourceConfig.UrlPrefix,
+                UrlPostfix = contentSourceConfig.UrlPostfix,
                 GenerateSummary = contentSourceConfig.GenerateSummary,
                 ContentSourceMetadata = contentSourceMetadata,
             };

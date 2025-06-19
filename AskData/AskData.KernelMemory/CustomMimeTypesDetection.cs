@@ -1,4 +1,4 @@
-﻿using Microsoft.KernelMemory.Pipeline;
+using Microsoft.KernelMemory.Pipeline;
 
 namespace AskData.KernelMemory;
 
@@ -13,6 +13,11 @@ internal sealed class CustomMimeTypesDetection
         if (TryGetFileType(filename, out var mimeType))
         {
             return mimeType!;
+        }
+
+        if (filename.EndsWith("LICENSE"))
+        {
+            return MimeTypes.PlainText;
         }
 
         throw new MimeTypeException($"File type not supported: {filename}", isTransient: false);
@@ -33,6 +38,7 @@ internal sealed class CustomMimeTypesDetection
     {
         { ".cs", ExtraMimeTypes.CSharp },
         { ".csproj", MimeTypes.XML },
+        { ".gitignore", MimeTypes.PlainText },
         { ".proj", MimeTypes.XML },
         { ".mmd", ExtraMimeTypes.Mermaid },
         { ".py", ExtraMimeTypes.Python },

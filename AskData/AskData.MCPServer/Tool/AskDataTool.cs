@@ -99,7 +99,7 @@ internal class AskDataTool(
                 }
 
                 var originalRelativePath = string.Empty;
-                if (partition.Tags.TryGetValue("original_filepath", out var originalRelativePaths))
+                if (partition.Tags.TryGetValue("orginal_relative_filepath", out var originalRelativePaths))
                 {
                     originalRelativePath = originalRelativePaths.FirstOrDefault() ?? string.Empty;
                 }

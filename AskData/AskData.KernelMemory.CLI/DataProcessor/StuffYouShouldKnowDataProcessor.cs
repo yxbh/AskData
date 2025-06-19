@@ -132,9 +132,9 @@ internal class StuffYouShouldKnowDataProcessor
             var fileMetadata = new FileMetadataModel
             {
                 OriginalName = Path.GetFileName(transcriptFilePath),
-                OriginalFilePath = transcriptFilePath,
+                LocalOriginalFullFilePath = transcriptFilePath,
                 LocalOriginalRootDir = contentSourceConfig.Directory,
-                LocalOriginalFilePath = Path.GetRelativePath(contentSourceConfig.Directory, transcriptFilePath),
+                LocalOriginalRelativeFilePath = Path.GetRelativePath(contentSourceConfig.Directory, transcriptFilePath),
                 FlattenName = fileFlattenName,
                 Title = title,
                 OutputPath = outputFilePath,

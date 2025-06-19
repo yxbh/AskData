@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.KernelMemory.DataFormats;
 using Microsoft.KernelMemory.Pipeline;
 using System.Text;

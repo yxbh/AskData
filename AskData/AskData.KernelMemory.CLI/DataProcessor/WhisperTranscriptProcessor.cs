@@ -97,9 +97,9 @@ internal class WhisperTranscriptProcessor
                 var fileMetadata = new FileMetadataModel
                 {
                     OriginalName = Path.GetFileName(filePath),
-                    OriginalFilePath = filePath,
+                    LocalOriginalFullFilePath = filePath,
                     LocalOriginalRootDir = contentSourceConfig.Directory,
-                    LocalOriginalFilePath = Path.GetRelativePath(contentSourceConfig.Directory, filePath),
+                    LocalOriginalRelativeFilePath = Path.GetRelativePath(contentSourceConfig.Directory, filePath),
                     FlattenName = fileFlattenName,
                     Title = title,
                     OutputPath = outputFilePath,

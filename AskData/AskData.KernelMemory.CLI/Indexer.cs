@@ -1,4 +1,4 @@
-﻿using AskData.KernelMemory.CLI.DataProcessor;
+using AskData.KernelMemory.CLI.DataProcessor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +15,7 @@ internal class Indexer(
     IMemoryDb memoryDb,
     IDocumentStorage storage,
     IOptions<KMConfig> configOptions,
+    MarkdownRefResolver markdownRefResolver,
     IServiceProvider serviceProvider,
     ILogger<Indexer> logger
     )
@@ -58,6 +59,8 @@ internal class Indexer(
                 logger.LogError(ex, $"Error processing content source {contentSourceConfig.Directory}: {ex.Message}");
             }            
         }
+
+        await markdownRefResolver.ResolveAsync(fileMetadataCollection, cancellationToken).ConfigureAwait(false);
 
         //
         // Delete documents that are not in the input list.
@@ -123,27 +126,26 @@ internal class Indexer(
                 cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
 
-            var orgRelativeFilePath = Path.GetRelativePath(fileMetadata.LocalOriginalRootDir, fileMetadata.LocalOriginalFilePath);
-
             var tags = new TagCollection
             {
                 { "orginal_filename", Path.GetFileName(file) },
                 { "orginal_filename_upper", Path.GetFileName(file).ToUpperInvariant() },
-                { "orginal_rel_filepath", orgRelativeFilePath },
-                { "orginal_rel_filepath_upper", orgRelativeFilePath.ToUpperInvariant() },
+                { "orginal_relative_filepath", fileMetadata.LocalOriginalRelativeFilePath },
+                { "orginal_relative_filepath_upper", fileMetadata.LocalOriginalRelativeFilePath.ToUpperInvariant() },
                 { "orginal_filetype", Path.GetExtension(file) },
                 { "orginal_filesize", new FileInfo(file).Length.ToString() },
-                { "orginal_filedate", File.GetLastWriteTime(file).ToString() },
+                { "orginal_filedate", File.GetLastWriteTime(fileMetadata.LocalOriginalFullFilePath).ToString() },
                 { "sha256", fileHash },
                 { "remote_url", fileMetadata.Url },
                 { "original_name", fileMetadata.OriginalName },
+                { "original_name_upper", fileMetadata.OriginalName.ToUpperInvariant() },
                 { "flatten_name", fileMetadata.FlattenName },
                 { "title", fileMetadata.Title },
                 { "title_upper", fileMetadata.Title.ToUpperInvariant() },
                 { "source", fileMetadata.Source },
-                { "original_filepath", fileMetadata.OriginalFilePath },
+                { "local_original_full_filepath", fileMetadata.LocalOriginalFullFilePath },
                 { "local_original_root_dir", fileMetadata.LocalOriginalRootDir },
-                { "local_original_filepath", fileMetadata.LocalOriginalFilePath },
+                { "local_original_relative_filepath", fileMetadata.LocalOriginalRelativeFilePath },
                 { "_output_path", fileMetadata.OutputPath },
             };
 
@@ -175,7 +177,7 @@ internal class Indexer(
                     {
                         if (resultTags.TryGetValue(tag.Key, out var resultTagValues))
                         {
-                            if (tag.Value != resultTagValues)
+                            if (!tag.Value.SequenceEqual(resultTagValues))
                             {
                                 isTagsMatching = false;
                                 break;
@@ -250,6 +252,13 @@ Summarize this:
                     300  // Try to generate a token no longer than X tokens
                 );
             }
+
+            // Delete the document if it already exists, to ensure we have the latest version.
+            await memory.DeleteDocumentAsync(
+                documentId,
+                index: configOptions.Value.IndexName,
+                cancellationToken: cancellationToken
+                ).ConfigureAwait(false);
 
             await memory.ImportDocumentAsync(
                 file,

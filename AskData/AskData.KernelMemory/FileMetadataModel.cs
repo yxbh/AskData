@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace AskData.KernelMemory;
 
@@ -16,17 +16,23 @@ public class FileMetadataModel
     [JsonPropertyName("source")]
     public string Source { get; set; } = string.Empty;
 
-    [JsonPropertyName("original_filepath")]
-    public string OriginalFilePath { get; set; } = string.Empty;
+    [JsonPropertyName("local_original_full_filepath")]
+    public string LocalOriginalFullFilePath { get; set; } = string.Empty;
 
     [JsonPropertyName("local_original_root_dir")]
     public string LocalOriginalRootDir { get; set; } = string.Empty;
 
-    [JsonPropertyName("local_original_filepath")]
-    public string LocalOriginalFilePath { get; set; } = string.Empty;
+    [JsonPropertyName("local_original_relative_filepath")]
+    public string LocalOriginalRelativeFilePath { get; set; } = string.Empty;
 
     [JsonPropertyName("url")]
     public string Url { get; set; } = string.Empty;
+
+    [JsonPropertyName("_url_prefix")]
+    public string UrlPrefix { get; set; } = string.Empty;
+
+    [JsonPropertyName("_url_postfix")]
+    public string UrlPostfix { get; set; } = string.Empty;
 
     [JsonPropertyName("_output_path")]
     public string OutputPath { get; set; } = string.Empty;
