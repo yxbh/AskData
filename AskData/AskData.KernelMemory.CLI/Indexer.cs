@@ -213,6 +213,7 @@ internal class Indexer(
             logger.LogInformation("Importing ({CurrentIndex}/{TotalFiles}) {FilePath} with document ID {DocumentId}", idx, fileMetadataCollection.Count, file, documentId);
 
             var steps = fileMetadata.GenerateSummary ? Constants.PipelineWithSummary : Constants.DefaultPipeline;
+            steps = ["graph_transform", .. steps];
 
             var context = new RequestContext();
             if (fileMetadata.GenerateSummary)
