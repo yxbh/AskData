@@ -8,6 +8,11 @@ public static class ServiceExtensions
 {    public static IServiceCollection AddKernelMemory(
         this IServiceCollection services, KMConfig config)
     {
+        services.AddDefaultHandlersAsHostedServices();
+        services.AddHandlerAsHostedService<LlmGraphTransformerHandler>("graph_transform");
+
+        //services.AddDefaultHandlersAsHostedServices();
+
         services.AddKernelMemory<MemoryServerless>(builder =>
         {
             builder
@@ -20,6 +25,8 @@ public static class ServiceExtensions
                         Directory = config.FileStorageDirectory,
                     })
                 ;
+
+            builder.Services.AddSingleton<LlmGraphTransformerHandler>();
 
             if (config.UseQdrant)
             {
