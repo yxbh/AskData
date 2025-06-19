@@ -16,7 +16,7 @@ internal partial class MarkdownRefResolver
             return;
         }
 
-        logger.LogInformation($"Resolving references for {fileModels.Count()} file models...");
+        logger.LogInformation("Resolving references for {FileModelCount} file models...", fileModels.Count());
 
         // bucket file models by their source
         var fileModelsBySource = fileModels.GroupBy(f => f.Source).ToDictionary(g => g.Key, g => g.ToList());
@@ -27,7 +27,7 @@ internal partial class MarkdownRefResolver
 
             var source = kvp.Key;
             var models = kvp.Value;
-            logger.LogInformation($"Processing source: {source} with {models.Count} files.");
+            logger.LogInformation("Processing source: {Source} with {FileCount} files.", source, models.Count);
             // Resolve references for each file model in the source
             await ResolveReferences(models, cancellationToken).ConfigureAwait(false);
         }
@@ -49,7 +49,7 @@ internal partial class MarkdownRefResolver
             cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(model.LocalOriginalRelativeFilePath) || !File.Exists(model.LocalOriginalRelativeFilePath))
             {
-                logger.LogWarning($"File not found or path is empty for model: {model.OutputPath} in source: {model.Source}");
+                logger.LogWarning("File not found or path is empty for model: {OutputPath} in source: {Source}", model.OutputPath, model.Source);
                 continue;
             }
 
@@ -60,7 +60,7 @@ internal partial class MarkdownRefResolver
             }
             catch
             {
-                logger.LogError($"Failed to read file: {model.LocalOriginalRelativeFilePath}");
+                logger.LogError("Failed to read file: {FilePath}", model.LocalOriginalRelativeFilePath);
                 continue;
             }
 
@@ -83,7 +83,7 @@ internal partial class MarkdownRefResolver
             }
         }
 
-        logger.LogInformation($"Found {uidToModel.Count} unique UIDs across all models.");
+        logger.LogInformation("Found {UidCount} unique UIDs across all models.", uidToModel.Count);
 
 
         // Resolve XRef's and relative path links
@@ -121,7 +121,7 @@ internal partial class MarkdownRefResolver
                 {
                     return $"[{text}]({refModel.Url})";
                 }
-                logger.LogWarning($"Unresolved xref: {uid} in file {model.LocalOriginalRelativeFilePath}");
+                logger.LogWarning("Unresolved xref: {Uid} in file {FilePath}", uid, model.LocalOriginalRelativeFilePath);
                 return match.Value;
             });
 
@@ -135,7 +135,7 @@ internal partial class MarkdownRefResolver
                 refPath = Path.GetRelativePath(model.LocalOriginalRootDir, refPath);
 
                 var url = $"{model.UrlPrefix}{refPath}{model.UrlPostfix}";
-                url =(new Uri(url)).ToString(); // Ensure URL is properly formatted
+                url = (new Uri(url)).ToString(); // Ensure URL is properly formatted
 
                 // Try to find a model whose LocalOriginalFilePath matches the relative path
                 var targetModel = models.FirstOrDefault(m =>
@@ -164,7 +164,7 @@ internal partial class MarkdownRefResolver
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to write updated file: {model.LocalOriginalRelativeFilePath}. Error: {ex.Message}");
+                logger.LogError(ex, "Failed to write updated file: {FilePath}. Error: {ErrorMessage}", model.LocalOriginalRelativeFilePath, ex.Message);
                 throw;
             }
         }

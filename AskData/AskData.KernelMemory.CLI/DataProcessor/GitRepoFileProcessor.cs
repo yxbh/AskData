@@ -38,7 +38,7 @@ internal class GitRepoFileProcessor
 
             if (!File.Exists(filePath))
             {
-                logger.LogError($"File not found: {filePath}");
+                logger.LogError("File not found: {FilePath}", filePath);
                 continue;
             }
 
@@ -89,8 +89,7 @@ internal class GitRepoFileProcessor
 
             output.Add(fileMetadata);
 
-            logger.LogInformation($"Processed file: {filePath} -> {outputFilePath}");
-            logger.LogInformation($"File metadata:\n{JsonSerializer.Serialize(fileMetadata, jsonSerializerOptions)}");
+            logger.LogInformation("Processed file: {FilePath} -> {OutputFilePath}", filePath, outputFilePath);
         }
 
         return output;

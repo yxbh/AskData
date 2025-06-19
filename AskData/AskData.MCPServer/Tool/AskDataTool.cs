@@ -173,7 +173,8 @@ URL: {url}
         var documents = new List<Document>();
         foreach (var docId in docIds)
         {
-            logger.LogInformation($"Found document ID \"{docId}\" with relevance score {docIdMaxRelevanceMap[docId]}");
+            var relevanceScore = docIdMaxRelevanceMap[docId];
+            logger.LogInformation("Found document ID \"{DocumentId}\" with relevance score {RelevanceScore}", docId, relevanceScore);
 
             var contentAnnotations = new Annotations()
             {
@@ -190,7 +191,7 @@ URL: {url}
                 }
                 else
                 {
-                    logger.LogError($"No title found for document ID: {docId}");
+                    logger.LogError("No title found for document ID: {DocumentId}", docId);
                 }
 
                 var text = "NO SUMMARY AVAILABLE";
@@ -200,6 +201,11 @@ URL: {url}
                     index: config.Value.IndexName,
                     cancellationToken: cancellationToken
                     ).ConfigureAwait(false);
+
+                if (summaryResults.Count == 0)
+                {
+                    logger.LogWarning("No summary found available for document ID: {DocumentId}", docId);
+                }
 
                 if (summaryResults.Count > 0)
                 {
@@ -213,7 +219,7 @@ URL: {url}
                 }
                 else
                 {
-                    logger.LogError($"No summary found available for document ID: {docId}");
+                    logger.LogError("No summary found available for document ID: {DocumentId}", docId);
                     //continue;
                 }
 

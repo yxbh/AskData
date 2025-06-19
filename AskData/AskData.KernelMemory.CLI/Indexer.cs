@@ -30,7 +30,7 @@ internal class Indexer(
         var contentProcessors = serviceProvider.GetServices<IContentProcessor>()
             .ToDictionary(p => p.SupportedContentType, p => p);
 
-        logger.LogInformation($"Starting indexing with {contentProcessors.Count} content processors.");
+        logger.LogInformation("Starting indexing with {ContentProcessorCount} content processors.", contentProcessors.Count);
 
         // For each content source, find the appropriate processor and process the content.
         var fileMetadataCollection = new List<FileMetadataModel>();
@@ -38,13 +38,13 @@ internal class Indexer(
         {
             if (!contentProcessors.TryGetValue(contentSourceConfig.ContentType, out var contentProcessor))
             {
-                logger.LogWarning($"No processor found for content type '{contentSourceConfig.ContentType}'. Skipping.");
+                logger.LogWarning("No processor found for content type '{ContentType}'. Skipping.", contentSourceConfig.ContentType);
                 continue;
             }
 
             try
             {
-                logger.LogInformation($"Processing content source: {contentSourceConfig.Directory} ({contentSourceConfig.ContentType})");
+                logger.LogInformation("Processing content source: {Directory} ({ContentType})", contentSourceConfig.Directory, contentSourceConfig.ContentType);
 
                 if (!Directory.Exists(contentSourceConfig.Directory))
                 {
@@ -56,7 +56,7 @@ internal class Indexer(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error processing content source {contentSourceConfig.Directory}: {ex.Message}");
+                logger.LogError(ex, "Error processing content source {Directory}: {ErrorMessage}", contentSourceConfig.Directory, ex.Message);
             }            
         }
 
@@ -74,10 +74,10 @@ internal class Indexer(
         var docIdsToDelete = currentlyIndexedDocIds.Except(inputDocIds).ToList();
         if (docIdsToDelete.Count > 0)
         {
-            logger.LogInformation($"Deleting {docIdsToDelete.Count} documents from the index.");
+            logger.LogInformation("Deleting {DocumentCount} documents from the index.", docIdsToDelete.Count);
             foreach (var docId in docIdsToDelete)
             {
-                logger.LogInformation($"Deleting document with ID: {docId}");
+                logger.LogInformation("Deleting document with ID: {DocumentId}", docId);
                 await memory.DeleteDocumentAsync(docId, index: configOptions.Value.IndexName, cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 await storage.DeleteDocumentDirectoryAsync(configOptions.Value.IndexName, docId, cancellationToken).ConfigureAwait(false);
@@ -91,7 +91,7 @@ internal class Indexer(
             return;
         }
 
-        logger.LogInformation($"Indexing {fileMetadataCollection.Count} files into memory.");
+        logger.LogInformation("Indexing {FileCount} files into memory.", fileMetadataCollection.Count);
 
         var idx = 0;
         foreach (var fileMetadata in fileMetadataCollection)
@@ -102,7 +102,7 @@ internal class Indexer(
 
             if (!File.Exists(file))
             {
-                logger.LogWarning($"File not found, skipping for now: {file}");
+                logger.LogWarning("File not found, skipping for now: {FilePath}", file);
                 continue;
             }
 
@@ -205,12 +205,12 @@ internal class Indexer(
 
                 if (sha256Hashes.Contains(fileHash) && isTagsMatching && !overwrite)
                 {
-                    logger.LogInformation($"Document with the same hash already imported. Skipping: {documentId}");
+                    logger.LogInformation("Document with the same hash already imported. Skipping: {DocumentId}", documentId);
                     continue;
                 }
             }
 
-            logger.LogInformation($"Importing ({idx}/{fileMetadataCollection.Count}) {file} with document ID {documentId}");
+            logger.LogInformation("Importing ({CurrentIndex}/{TotalFiles}) {FilePath} with document ID {DocumentId}", idx, fileMetadataCollection.Count, file, documentId);
 
             var steps = fileMetadata.GenerateSummary ? Constants.PipelineWithSummary : Constants.DefaultPipeline;
 
