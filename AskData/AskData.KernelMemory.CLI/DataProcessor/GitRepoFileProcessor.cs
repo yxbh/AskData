@@ -84,6 +84,7 @@ internal class GitRepoFileProcessor
                 UrlPrefix = contentSourceConfig.UrlPrefix,
                 UrlPostfix = contentSourceConfig.UrlPostfix,
                 GenerateSummary = contentSourceConfig.GenerateSummary,
+                GenerateGraphTransform = contentSourceConfig.GenerateGraphTransform,
                 ContentSourceMetadata = contentSourceMetadata,
             };
 

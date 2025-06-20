@@ -10,6 +10,8 @@ public class ContentSourceConfig
 
     public bool GenerateSummary { get; set; } = false;  // Perform additional summarization steps.
 
+    public bool GenerateGraphTransform { get; set; } = false;  // 
+
     public string[] IncludePattern { get; set; } = [];
 
     public string[] ExcludePattern { get; set; } = [];
