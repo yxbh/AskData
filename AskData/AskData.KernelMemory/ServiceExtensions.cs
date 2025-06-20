@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.KernelMemory;
 using Microsoft.KernelMemory.Pipeline;
 
@@ -8,10 +9,14 @@ public static class ServiceExtensions
 {    public static IServiceCollection AddKernelMemory(
         this IServiceCollection services, KMConfig config)
     {
-        services.AddDefaultHandlersAsHostedServices();
-        services.AddHandlerAsHostedService<LlmGraphTransformerHandler>("graph_transform");
-
-        //services.AddDefaultHandlersAsHostedServices();
+        services.AddSingleton<LlmGraphTransformerHandler>(serviceProvider =>
+        {
+            return new LlmGraphTransformerHandler(
+                "graph_transform",
+                serviceProvider.GetRequiredService<IPipelineOrchestrator>(),
+                serviceProvider.GetService<ILoggerFactory>()
+            );
+        });
 
         services.AddKernelMemory<MemoryServerless>(builder =>
         {
@@ -25,8 +30,6 @@ public static class ServiceExtensions
                         Directory = config.FileStorageDirectory,
                     })
                 ;
-
-            builder.Services.AddSingleton<LlmGraphTransformerHandler>();
 
             if (config.UseQdrant)
             {

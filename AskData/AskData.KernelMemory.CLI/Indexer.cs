@@ -16,6 +16,7 @@ internal class Indexer(
     IDocumentStorage storage,
     IOptions<KMConfig> configOptions,
     MarkdownRefResolver markdownRefResolver,
+    LlmGraphTransformerHandler llmGraphTransformerHandler,
     IServiceProvider serviceProvider,
     ILogger<Indexer> logger
     )
@@ -26,6 +27,15 @@ internal class Indexer(
         CancellationToken cancellationToken = default
     )
     {
+        if (memory is MemoryServerless memoryServerless)
+        {
+            memoryServerless.Orchestrator.AddHandler(llmGraphTransformerHandler);
+        }
+        else
+        {
+            throw new NotImplementedException($"Support for IKernelMemory implementation other than {nameof(MemoryServerless)} is not implemented.");
+        }
+
         // Get list of IContentProcessor from DI container mapped by SupportedContentType
         var contentProcessors = serviceProvider.GetServices<IContentProcessor>()
             .ToDictionary(p => p.SupportedContentType, p => p);
@@ -213,7 +223,10 @@ internal class Indexer(
             logger.LogInformation("Importing ({CurrentIndex}/{TotalFiles}) {FilePath} with document ID {DocumentId}", idx, fileMetadataCollection.Count, file, documentId);
 
             var steps = fileMetadata.GenerateSummary ? Constants.PipelineWithSummary : Constants.DefaultPipeline;
-            steps = ["graph_transform", .. steps];
+            if (fileMetadata.GenerateGraphTransform)
+            {
+                steps = [.. steps, "graph_transform"];
+            }
 
             var context = new RequestContext();
             if (fileMetadata.GenerateSummary)
