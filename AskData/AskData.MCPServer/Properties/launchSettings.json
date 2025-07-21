@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "AskData.MCPServer": {
+      "commandName": "Project",
+      "workingDirectory": "$(SolutionDir)\\..\\",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

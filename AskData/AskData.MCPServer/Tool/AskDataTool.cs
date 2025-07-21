@@ -12,14 +12,13 @@ namespace AskData.MCPServer.Tool;
 [McpServerToolType]
 internal class AskDataTool(
     IKernelMemory memory,
-    IMcpServer server,
     IOptions<KMConfig> config,
     ILogger<AskDataTool> logger
     )
 {
     [McpServerTool(Name = "AskData", Destructive = false, Idempotent = true, OpenWorld = true, ReadOnly = true)]
     [Description("Search AskData memory for relevant content based on the input query. The query should be as detailed as possible. Returns a list of content with relevance scores.")]
-    public async Task<List<Content>> SearchAskDataAsync(
+    public async Task<List<TextContentBlock>> SearchAskDataAsync(
         [Description("Input text to process.")] string query,
         CancellationToken cancellationToken = default
     )
@@ -28,11 +27,11 @@ internal class AskDataTool(
             query,
             index: config.Value.IndexName, // Use the index name from the configuration
             limit: 10, // Limit the number of results to 5
-            minRelevance: 0.5, // Minimum relevance score
+            minRelevance: config.Value.SearchMinRelevance, // Minimum relevance score
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
 
-        var response = new List<Content>();
+        var response = new List<TextContentBlock>();
 
         if (results is null || results.Results.Count == 0)
         {
@@ -47,7 +46,7 @@ internal class AskDataTool(
     }
 
     public async Task ExpandedPartionsStrategyAsync(
-        IKernelMemory memory, List<Content> toolResponse, SearchResult searchResult, CancellationToken cancellationToken)
+        IKernelMemory memory, List<TextContentBlock> toolResponse, SearchResult searchResult, CancellationToken cancellationToken)
     {
         foreach (var citation in searchResult.Results)
         {
@@ -138,7 +137,7 @@ URL: {url}
     }
 
     public async Task WholeFileOrSummaryResponseStrategyAsync(
-        IKernelMemory memory, List<Content> toolResponse, SearchResult searchResult, CancellationToken cancellationToken)
+        IKernelMemory memory, List<TextContentBlock> toolResponse, SearchResult searchResult, CancellationToken cancellationToken)
     {
         // create doc ID to filename map
         var docIdFilenameMap = new Dictionary<string, string>();
@@ -223,7 +222,7 @@ URL: {url}
                     //continue;
                 }
 
-                toolResponse.Add(new Content()
+                toolResponse.Add(new ()
                 {
                     Text = $"""
 ---
@@ -264,7 +263,7 @@ Query Relevance: {docIdMaxRelevanceMap[docId]}
             contentTextLength += fileContent.Length;
 
 
-            toolResponse.Add(new Content
+            toolResponse.Add(new ()
             {
                 Text = $"""
 ---

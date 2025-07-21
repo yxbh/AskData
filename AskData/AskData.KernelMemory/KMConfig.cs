@@ -19,4 +19,8 @@ public class KMConfig
     public string VectorStorageDirectory { get; set; } = string.Empty;
 
     public bool UseQdrant { get; set; } = true;
+
+    public float SearchMinRelevance { get; set; } = 0.5f;
+
+    public int SearchLimit { get; set; } = 10;
 }

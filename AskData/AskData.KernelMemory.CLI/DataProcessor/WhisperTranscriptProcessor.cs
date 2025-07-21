@@ -110,12 +110,12 @@ internal class WhisperTranscriptProcessor
 
                 output.Add(fileMetadata);
 
-                logger.LogInformation($"Processed file: {filePath} -> {outputFilePath}");
-                logger.LogInformation($"File metadata:\n{JsonSerializer.Serialize(fileMetadata, jsonSerializerOptions)}");
+                logger.LogInformation("Processed file: {FilePath} -> {OutputFilePath}", filePath, outputFilePath);
+                logger.LogInformation("File metadata:\n{Metadata}", JsonSerializer.Serialize(fileMetadata, jsonSerializerOptions));
             }
             catch (Exception ex)
             {
-                logger.LogError($"Error processing file {filePath}: {ex.Message}");
+                logger.LogError("Error processing file {FilePath}: {ExceptionMessage}", filePath, ex.Message);
             }
         }
 

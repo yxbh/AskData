@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.KernelMemory;
-using ModelContextProtocol.Server;
 using NSubstitute;
 
 namespace AskData.MCPServer.UnitTests;
@@ -38,7 +37,6 @@ public class AskDataToolTests
 
         var tool = new AskDataTool(
             serviceProvider.GetRequiredService<IKernelMemory>(),
-            Substitute.For<IMcpServer>(),
             kmConfig,
             Substitute.For<ILogger<AskDataTool>>()
         );

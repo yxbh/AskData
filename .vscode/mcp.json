@@ -1,9 +1,13 @@
 {
     "servers": {
+        // "AskData": {
+        //     "type": "stdio",
+        //     "command": "${workspaceFolder}/AskData/AskData.MCPServer/bin/Debug/net9.0/AskData.MCPServer.exe",
+        //     "args": []
+        // }
         "AskData": {
-            "type": "stdio",
-            "command": "${workspaceFolder}/AskData/AskData.MCPServer/bin/Debug/net9.0/AskData.MCPServer.exe",
-            "args": []
+            "type": "http",
+            "url": "http://localhost:3001"
         }
     }
 }

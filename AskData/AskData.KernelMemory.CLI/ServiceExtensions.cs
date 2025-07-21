@@ -9,6 +9,9 @@ internal static class ServiceExtensions
     {
         services.AddSingleton<Indexer>();
 
+        services.AddTransient<PlainTextProcessor>();
+        services.AddTransient<IContentProcessor, PlainTextProcessor>();
+
         services.AddTransient<GitRepoFileProcessor>();
         services.AddTransient<IContentProcessor, GitRepoFileProcessor>();
 

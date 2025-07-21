@@ -10,8 +10,9 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.5" />
     <PackageVersion Include="Microsoft.KernelMemory" Version="0.98.250508.3" />
-    <PackageVersion Include="ModelContextProtocol" Version="0.2.0-preview.3" />
+    <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.3" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.9.0" SecurityFixFor="https://github.com/advisories/GHSA-59j7-ghrg-fj52" />
