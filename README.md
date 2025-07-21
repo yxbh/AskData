@@ -12,6 +12,8 @@ Architecturally, we are using:
 - Qdrant as our vector database running in Docker.
 - Microsoft.KernelMemory as the framework to interact with our data and push/pull from Ollama and Qdrant.
 
+Refer to the [slides](doc\slide00.md) for overview.
+
 ## Setting up the environment
 
 First, install Ollama:

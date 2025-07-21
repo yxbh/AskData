@@ -6,7 +6,7 @@ using Microsoft.KernelMemory.Diagnostics;
 using Microsoft.KernelMemory.Pipeline;
 using System.Text;
 
-namespace AskData.KernelMemory;
+namespace AskData.KernelMemory.Graph;
 
 public class LlmGraphTransformerHandler(
     string stepName,
